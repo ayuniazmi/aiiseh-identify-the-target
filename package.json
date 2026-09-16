@@ -1,0 +1,13 @@
+{
+  "name": "team-bonding-game",
+  "version": "1.0.0",
+  "description": "Call-out-a-name party game: project a question, 15s timer, players shout a fitting name.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+data/*.json
+.DS_Store
+.claude/
+
+# build outputs — index.html at the repo root is the published build
+dist/
+artifact.html

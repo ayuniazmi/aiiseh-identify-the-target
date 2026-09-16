@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIISeh Team Bonding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@500;600;700&family=Poppins:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- cinematic texture overlays -->
+<div class="vignette" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div id="wipe" class="wipe" aria-hidden="true"></div>
+<div id="flash-overlay" class="flash-overlay" aria-hidden="true"></div>
+<div id="timeup-stamp" class="timeup-stamp" aria-hidden="true"><span>TIME'S UP</span></div>
+
+<canvas id="depth-field" class="depth-field" aria-hidden="true"></canvas>
+
+<div class="bg-fx" aria-hidden="true">
+  <div class="aurora a1"></div>
+  <div class="aurora a2"></div>
+  <div class="aurora a3"></div>
+  <div class="laser-grid"></div>
+  <div class="radar">
+    <span class="radar-ring r1"></span>
+    <span class="radar-ring r2"></span>
+    <span class="radar-ring r3"></span>
+    <span class="radar-sweep"></span>
+  </div>
+  <span class="spark s1"><svg viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M2 12h6M16 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+  <span class="spark s2"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
+  <span class="spark s3"><svg viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M2 12h6M16 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+  <span class="spark s4"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></span>
+  <span class="spark s5"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
+  <span class="spark s6"><svg viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M2 12h6M16 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <polygon points="12,2.5 20,7 20,17 12,21.5 4,17 4,7" stroke-linejoin="round"/>
+        <path d="M12 6v5l3.2 2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+      </svg>
+    </span>
+    <h1>AIISeh</h1>
+  </div>
+  <div class="topbar-right">
+    <button id="mute-btn" class="mute-btn" title="Toggle music">
+      <svg id="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="4,9 8,9 13,4 13,20 8,15 4,15" fill="currentColor" stroke="none"/>
+        <path d="M16 8a5 5 0 0 1 0 8"/>
+        <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+      </svg>
+      <svg id="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="4,9 8,9 13,4 13,20 8,15 4,15" fill="currentColor" stroke="none"/>
+        <line x1="16" y1="9" x2="22" y2="15"/>
+        <line x1="22" y1="9" x2="16" y2="15"/>
+      </svg>
+      <span id="music-indicator" class="music-indicator"></span>
+    </button>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="setup">Setup</button>
+      <button class="tab-btn" data-tab="play">Play</button>
+    </nav>
+  </div>
+</header>
+
+<!-- SETUP VIEW -->
+<section id="setup-view" class="view active">
+  <div class="panel">
+    <h2>Add questions</h2>
+    <p class="hint">Add one question at a time, or paste many (one per line) into the box below.</p>
+    <div class="row">
+      <input id="single-question" type="text" placeholder="e.g. Name someone who is always late" />
+      <button id="add-single-btn">Add</button>
+    </div>
+    <textarea id="bulk-question" rows="5" placeholder="Paste multiple questions, one per line..."></textarea>
+    <div class="bulk-actions">
+      <button id="add-bulk-btn">Add all</button>
+      <button id="replace-bulk-btn" class="danger">Replace all</button>
+      <span id="bulk-status" class="import-status"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Question list (<span id="question-count">0</span>)</h2>
+      <button id="clear-all-btn" class="danger">Clear all</button>
+    </div>
+    <ul id="question-list" class="question-list"></ul>
+    <div class="share-row">
+      <button id="share-btn" class="primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>COPY ALL QUESTIONS</span>
+      </button>
+      <span id="share-status" class="import-status"></span>
+      <p class="share-hint">
+        Copies all <span id="share-count">0</span> questions as plain text. Send them to a co-host —
+        they paste into the box above and hit <strong>Replace all</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel recap-panel">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+      <span>Case File</span>
+    </h2>
+    <ul id="answer-log" class="answer-log"></ul>
+  </div>
+</section>
+
+<!-- PLAY VIEW -->
+<section id="play-view" class="view">
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
+  <div class="stage-border">
+   <span class="hud-corner tl"></span>
+   <span class="hud-corner tr"></span>
+   <span class="hud-corner bl"></span>
+   <span class="hud-corner br"></span>
+   <div class="telemetry" aria-hidden="true">
+     <div class="tel tl"><span class="rec-dot"></span>REC <span id="tel-clock">00:00:00</span></div>
+     <div class="tel tr">SIG<i class="bars"><b></b><b></b><b></b><b></b></i></div>
+     <div class="tel bl">LAT 3.1390°N · LON 101.6869°E</div>
+     <div class="tel br">ENC AES-256 · CH 07</div>
+   </div>
+   <div class="alert-edges" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+   <div class="game-stage">
+    <div class="scanline" aria-hidden="true"></div>
+    <div class="timer-bar" aria-hidden="true"><span id="timer-bar-fill"></span></div>
+
+    <!-- Idle / hero start state -->
+    <div id="stage-idle" class="stage-panel idle-panel">
+      <div class="lobby-word" aria-hidden="true">STANDBY</div>
+      <svg class="lobby-reticle" viewBox="0 0 420 420" aria-hidden="true">
+        <circle cx="210" cy="210" r="196"/>
+        <circle class="lr-dash" cx="210" cy="210" r="160"/>
+        <circle class="lr-spin" cx="210" cy="210" r="118"/>
+        <path d="M210 0 V48 M210 372 V420 M0 210 H48 M372 210 H420"/>
+      </svg>
+
+      <div class="idle-inner">
+        <div class="idle-badge"><span class="blink-dot"></span> TOP SECRET &middot; LEVEL 5</div>
+        <h2 class="idle-title" data-text="IDENTIFY THE TARGET">IDENTIFY THE TARGET</h2>
+        <p class="idle-sub">A classified profile drops on screen. Your unit has <strong>10 seconds</strong> to call out a name before the file burns.</p>
+        <div class="idle-actions">
+          <button id="start-btn" class="primary giant-btn">
+            <span>BEGIN MISSION</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          </button>
+          <div class="dossier-stat">
+            <span id="dossier-count">00</span>
+            <em>Dossiers<br>loaded</em>
+          </div>
+        </div>
+        <p class="idle-hint" id="idle-hint">Add questions in the Setup tab first</p>
+      </div>
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>UPLINK ESTABLISHED</span><span>AGENTS ON STANDBY</span><span>DOSSIERS ENCRYPTED</span><span>AWAITING ORDERS</span><span>CLEARANCE VERIFIED</span>
+          <span>UPLINK ESTABLISHED</span><span>AGENTS ON STANDBY</span><span>DOSSIERS ENCRYPTED</span><span>AWAITING ORDERS</span><span>CLEARANCE VERIFIED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active question state -->
+    <div id="stage-question" class="stage-panel question-panel" hidden>
+      <div class="ghost-word" aria-hidden="true">CLASSIFIED</div>
+
+      <div class="q-left">
+        <div id="ghost-timer" class="ghost-timer" aria-hidden="true">10</div>
+        <div class="progress" id="progress">TARGET 0 / 0</div>
+        <div class="timer-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
+            <circle id="ring-progress" class="ring-progress" cx="60" cy="60" r="54"></circle>
+          </svg>
+          <div id="timer-num" class="timer-num">10</div>
+        </div>
+      </div>
+
+      <div class="q-right">
+        <svg class="reticle" viewBox="0 0 420 420" aria-hidden="true">
+          <circle class="r-ring1" cx="210" cy="210" r="170"/>
+          <circle class="r-ring2" cx="210" cy="210" r="132"/>
+          <path class="r-ticks" d="M210 18 V58 M210 362 V402 M18 210 H58 M362 210 H402"/>
+          <path class="r-brackets" d="M86 54 H54 V86 M334 54 H366 V86 M86 366 H54 V334 M334 366 H366 V334"/>
+        </svg>
+
+        <div class="dossier-label">DECRYPTED FILE</div>
+        <div id="question-display" class="question-display"></div>
+
+        <div class="answer-row">
+          <input id="answer-name" type="text" placeholder="Identify the agent..." autocomplete="off" />
+          <button id="log-answer-btn">Log</button>
+        </div>
+        <div id="logged-for-question" class="logged-list"></div>
+
+        <div class="controls">
+          <button id="next-btn" class="primary">
+            <span>NEXT</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          </button>
+          <button id="shuffle-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            <span>SHUFFLE</span>
+          </button>
+          <button id="restart-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>ABORT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game over state -->
+    <div id="stage-gameover" class="stage-panel gameover-panel" hidden>
+      <div class="shockwave-rings" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="gameover-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 2l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6z" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="gameover-title" id="gameover-title">MISSION COMPLETE</h2>
+      <p class="gameover-sub" id="gameover-stats">All targets identified.</p>
+
+      <div class="debrief">
+        <div class="debrief-label">// MISSION DEBRIEF</div>
+        <ul id="gameover-list" class="gameover-list"></ul>
+      </div>
+
+      <div class="controls">
+        <button id="gameover-restart-btn" class="primary giant-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>NEW MISSION</span>
+        </button>
+      </div>
+    </div>
+
+   </div>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
