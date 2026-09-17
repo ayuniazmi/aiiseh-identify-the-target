@@ -1758,6 +1758,10 @@ button.armed {
             <svg class="icon-resume" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="7,4 20,12 7,20"/></svg>
             <span id="pause-label">PAUSE</span>
           </button>
+          <button id="reset-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>RESET</span>
+          </button>
           <button id="next-btn" class="primary">
             <span>NEXT</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
@@ -2358,6 +2362,20 @@ function previousQuestion() {
   goToIndex(currentIndex - 1);
 }
 
+// Restarts the clock on the CURRENT target — a mis-click, a dispute over
+// the answer, a name called after the buzzer. goToIndex already does
+// everything a reset needs (fresh timer, replayed reveal, cleared pause/
+// lock state) when called with the index it's already on, so this just
+// reuses it and drops that question's entry from this run's debrief —
+// otherwise a stale name from before the reset would still show at the
+// end even though nothing was actually answered after resetting.
+function resetCurrentQuestion() {
+  if (currentIndex < 0 || currentIndex >= playOrder.length) return;
+  const q = currentQuestion();
+  if (q) sessionAnswers = sessionAnswers.filter(a => String(a.questionId) !== String(q.id));
+  goToIndex(currentIndex);
+}
+
 // Shared by next and back so both land a question the same way.
 function goToIndex(index) {
   stopTimer();
@@ -2569,6 +2587,11 @@ document.getElementById('pause-btn').addEventListener('click', () => {
 document.getElementById('back-btn').addEventListener('click', () => {
   initAudio();
   previousQuestion();
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  initAudio();
+  resetCurrentQuestion();
 });
 
 function timeUp() {

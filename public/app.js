@@ -544,6 +544,20 @@ function previousQuestion() {
   goToIndex(currentIndex - 1);
 }
 
+// Restarts the clock on the CURRENT target — a mis-click, a dispute over
+// the answer, a name called after the buzzer. goToIndex already does
+// everything a reset needs (fresh timer, replayed reveal, cleared pause/
+// lock state) when called with the index it's already on, so this just
+// reuses it and drops that question's entry from this run's debrief —
+// otherwise a stale name from before the reset would still show at the
+// end even though nothing was actually answered after resetting.
+function resetCurrentQuestion() {
+  if (currentIndex < 0 || currentIndex >= playOrder.length) return;
+  const q = currentQuestion();
+  if (q) sessionAnswers = sessionAnswers.filter(a => String(a.questionId) !== String(q.id));
+  goToIndex(currentIndex);
+}
+
 // Shared by next and back so both land a question the same way.
 function goToIndex(index) {
   stopTimer();
@@ -755,6 +769,11 @@ document.getElementById('pause-btn').addEventListener('click', () => {
 document.getElementById('back-btn').addEventListener('click', () => {
   initAudio();
   previousQuestion();
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  initAudio();
+  resetCurrentQuestion();
 });
 
 function timeUp() {
