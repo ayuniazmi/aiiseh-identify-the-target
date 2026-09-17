@@ -1443,15 +1443,16 @@ button.armed {
 .gameover-list li .q {
   display: block;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: clamp(0.82rem, 1.45vw, 1.15rem);
   font-weight: 700;
-  letter-spacing: 2.5px;
+  /* Wraps rather than truncating: at this size an ellipsised question
+     would lose more text than the smaller version did, which defeats
+     the point of enlarging it. */
+  letter-spacing: 1.4px;
+  line-height: 1.45;
   text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #9db4d6;
+  margin-bottom: 6px;
 }
 /* the called-out name is the payoff — make it the biggest thing on screen */
 .gameover-list li .n {
