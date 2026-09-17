@@ -578,10 +578,20 @@ button.armed {
 }
 
 /* ---- HUD telemetry (fullscreen only) ---- */
+/* --hud-band is the vertical room the top readouts need: their offset plus
+   their own height plus a gap. The stage reserves exactly this as its top
+   padding so content starts BELOW them. Keep the two values together — a
+   band equal to `.tel` `top` puts content on the same line as the readout,
+   which is invisible while the stage is tall enough to centre its content
+   and only shows up on short screens, where centring falls back to the top. */
+#play-view.cinematic { --hud-band: 92px; }
 .telemetry { display: none; }
-/* only on screens wide enough that the four readouts can't collide */
-@media (min-width: 900px) {
+/* Shown only where the readouts have room: wide enough that the four can't
+   collide side to side, and tall enough that reserving the band still leaves
+   a full panel below it. Short laptops get a clean stage instead. */
+@media (min-width: 900px) and (min-height: 640px) {
   #play-view.cinematic .telemetry { display: block; }
+  #play-view.cinematic { --hud-band: 124px; }
 }
 .tel {
   position: absolute;
@@ -1306,7 +1316,7 @@ button.armed {
   justify-content: safe center;
   align-items: center;
   overflow: hidden auto;
-  padding: 92px 4vw 44px;
+  padding: var(--hud-band) 4vw 44px;
 }
 #play-view.cinematic .stage-panel { width: 100%; }
 /* the ring is replaced by the hero number + top bar in fullscreen */
@@ -1541,6 +1551,18 @@ button.armed {
   to { transform: translateY(100vh) rotate(540deg); opacity: 0.2; }
 }
 
+/* Short laptop screens. The lobby's editorial spacing is sized for a tall
+   window; on a short one it overflows and BEGIN MISSION drops below the fold,
+   so spend less height rather than rely on scrolling — this is projected. */
+@media (max-height: 760px) {
+  .idle-title { font-size: clamp(2.4rem, 5.6vw, 4.4rem); margin-bottom: 14px; }
+  .idle-badge { margin-bottom: 14px; }
+  .idle-hint { margin-top: 14px; }
+}
+@media (max-height: 760px) and (min-width: 860px) {
+  .idle-sub { margin-bottom: 26px; }
+}
+
 @media (max-width: 700px) {
   .topbar { flex-direction: column; gap: 12px; align-items: flex-start; padding: 14px 18px; }
   .topbar-right { width: 100%; justify-content: space-between; }
@@ -1551,7 +1573,6 @@ button.armed {
   #play-view.cinematic .game-stage { padding: 120px 6vw 30px; }
   .scanlines { opacity: 0.3; }
 }
-
 </style>
 </head>
 <body>
@@ -3078,7 +3099,6 @@ function setStatus(id, msg, ok) {
   el.classList.toggle('bad', !ok);
   setTimeout(() => { el.textContent = ''; el.classList.remove('ok', 'bad'); }, 3500);
 }
-
 </script>
 </body>
 </html>
