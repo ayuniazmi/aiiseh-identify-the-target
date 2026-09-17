@@ -962,8 +962,16 @@ button.armed {
     grid-template-columns: minmax(200px, 30%) 1fr;
   }
 }
-.q-left { position: relative; z-index: 2; }
-.q-right { position: relative; z-index: 2; min-width: 0; }
+/* No z-index here on purpose. `position: relative` alone doesn't open a
+   new stacking context — but a z-index value (even to sit above the
+   background layers below) does, and that was the actual pause-veil bug:
+   it trapped .controls' z-index:8 inside this element's own context, so
+   the veil (a sibling of #stage-question with a higher z-index) painted
+   over the whole panel — controls included — no matter what z-index
+   .controls had inside it. DOM order already keeps this above the
+   background layers (.ghost-word, .reticle), so no z-index is needed. */
+.q-left { position: relative; }
+.q-right { position: relative; min-width: 0; }
 
 /* huge outlined word sitting behind everything */
 .ghost-word { display: none; }
@@ -1143,11 +1151,16 @@ button.armed {
   background: rgba(23, 224, 240, 0.1);
 }
 
-/* held-signal veil over the stage while paused */
+/* held-signal veil over the stage while paused. Lives as a direct child
+   of #stage-question (sibling of .q-left/.q-right) precisely so it shares
+   their stacking context — z-index 6 puts it above the unpositioned
+   background layers and above q-left/q-right's own (unset) level, while
+   staying below .controls' z-index:8, so Back/Pause/Next stay visible
+   and reachable on top of the dimmed stage. */
 .paused-veil {
   position: absolute;
   inset: 0;
-  z-index: 7;
+  z-index: 6;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -1667,10 +1680,6 @@ button.armed {
    <div class="game-stage">
     <div class="scanline" aria-hidden="true"></div>
     <div class="timer-bar" aria-hidden="true"><span id="timer-bar-fill"></span></div>
-    <div id="paused-veil" class="paused-veil" aria-hidden="true">
-      <span class="paused-word">PAUSED</span>
-      <span class="paused-sub">Signal held &mdash; tap resume to continue</span>
-    </div>
 
     <!-- Idle / hero start state -->
     <div id="stage-idle" class="stage-panel idle-panel">
@@ -1762,6 +1771,15 @@ button.armed {
             <span>ABORT</span>
           </button>
         </div>
+      </div>
+
+      <!-- A sibling of .q-left/.q-right (not nested inside either), so it
+           shares their stacking context and .controls' z-index can
+           actually out-rank it. See the comment on .paused-veil in
+           style.css for why that placement matters. -->
+      <div id="paused-veil" class="paused-veil" aria-hidden="true">
+        <span class="paused-word">PAUSED</span>
+        <span class="paused-sub">Signal held &mdash; tap resume to continue</span>
       </div>
     </div>
 

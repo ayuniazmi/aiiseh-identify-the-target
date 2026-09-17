@@ -136,10 +136,6 @@
    <div class="game-stage">
     <div class="scanline" aria-hidden="true"></div>
     <div class="timer-bar" aria-hidden="true"><span id="timer-bar-fill"></span></div>
-    <div id="paused-veil" class="paused-veil" aria-hidden="true">
-      <span class="paused-word">PAUSED</span>
-      <span class="paused-sub">Signal held &mdash; tap resume to continue</span>
-    </div>
 
     <!-- Idle / hero start state -->
     <div id="stage-idle" class="stage-panel idle-panel">
@@ -231,6 +227,15 @@
             <span>ABORT</span>
           </button>
         </div>
+      </div>
+
+      <!-- A sibling of .q-left/.q-right (not nested inside either), so it
+           shares their stacking context and .controls' z-index can
+           actually out-rank it. See the comment on .paused-veil in
+           style.css for why that placement matters. -->
+      <div id="paused-veil" class="paused-veil" aria-hidden="true">
+        <span class="paused-word">PAUSED</span>
+        <span class="paused-sub">Signal held &mdash; tap resume to continue</span>
       </div>
     </div>
 
