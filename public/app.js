@@ -41,6 +41,7 @@ function switchTab(tab) {
 // Stop the clock and clear every alarm visual, without logging anything.
 function freezeRound() {
   stopTimer();
+  setPaused(false);
   document.getElementById('timeup-stamp')?.classList.remove('go');
   document.getElementById('flash-overlay')?.classList.remove(
     'flash-pulse', 'flash-pulse-urgent', 'flash-lock'
@@ -464,7 +465,9 @@ function resetPlayOrder() {
   playOrder = questions.map(q => q.id);
   currentIndex = -1;
   sessionAnswers = [];
-  stopTimer();
+  // freezeRound rather than stopTimer: returning to the lobby while paused
+  // must also drop the pause veil, or it covers the lobby.
+  freezeRound();
   updateProgress();
   resetRing();
   showStage('idle');
@@ -529,16 +532,25 @@ function currentQuestion() {
 }
 
 function advanceQuestion() {
-  const wasIdle = currentIndex === -1;
-  stopTimer();
-  currentIndex++;
-  document.getElementById('logged-for-question').textContent = '';
-  document.getElementById('answer-name').value = '';
-
-  if (wasIdle) {
+  if (currentIndex === -1) {          // leaving the lobby
     stopLobbyMusic();
     playMissionStinger();
   }
+  goToIndex(currentIndex + 1);
+}
+
+function previousQuestion() {
+  if (currentIndex <= 0) return;      // already on the first target
+  goToIndex(currentIndex - 1);
+}
+
+// Shared by next and back so both land a question the same way.
+function goToIndex(index) {
+  stopTimer();
+  setPaused(false);
+  currentIndex = index;
+  document.getElementById('logged-for-question').textContent = '';
+  document.getElementById('answer-name').value = '';
 
   if (currentIndex >= playOrder.length) {
     document.getElementById('gameover-stats').textContent =
@@ -570,8 +582,18 @@ function advanceQuestion() {
   display.classList.remove('urgent');
   scrambleReveal(display, q.text);
   updateProgress();
+  updateBackButton();
   startTimer();
   document.getElementById('answer-name').focus();
+}
+
+function updateBackButton() {
+  const btn = document.getElementById('back-btn');
+  if (!btn) return;
+  const atFirst = currentIndex <= 0;
+  btn.disabled = atFirst;
+  btn.style.opacity = atFirst ? '0.35' : '1';
+  btn.style.pointerEvents = atFirst ? 'none' : 'auto';
 }
 
 function renderDebrief() {
@@ -646,6 +668,18 @@ function startTimer() {
   bar.style.transition = '';
   playTick(false);
 
+  runClock();
+}
+
+// The ticking itself, split out so pause can stop and restart it without
+// resetting secondsLeft back to the top.
+function runClock() {
+  const ring = document.getElementById('ring-progress');
+  const num = document.getElementById('timer-num');
+  const stage = document.querySelector('.game-stage');
+  const ghost = document.getElementById('ghost-timer');
+  const bar = document.getElementById('timer-bar-fill');
+
   timerInterval = setInterval(() => {
     secondsLeft--;
     const offset = RING_CIRCUMFERENCE * (1 - secondsLeft / TIMER_SECONDS);
@@ -676,6 +710,52 @@ function startTimer() {
     }
   }, 1000);
 }
+
+// ---------- Pause / resume ----------
+
+let paused = false;
+
+function setPaused(on) {
+  paused = on;
+  document.getElementById('paused-veil').classList.toggle('on', on);
+  document.getElementById('pause-btn').classList.toggle('is-paused', on);
+  document.getElementById('pause-label').textContent = on ? 'RESUME' : 'PAUSE';
+}
+
+function pauseGame() {
+  if (!timerInterval) return;                 // nothing running to pause
+  clearInterval(timerInterval);
+  timerInterval = null;
+  // Snap the draining bar to the current second, otherwise its in-flight
+  // 1s transition keeps sliding after the clock has stopped.
+  const bar = document.getElementById('timer-bar-fill');
+  bar.style.transition = 'none';
+  bar.style.width = `${(Math.max(secondsLeft, 0) / TIMER_SECONDS) * 100}%`;
+  setPaused(true);
+}
+
+function resumeGame() {
+  if (!paused) return;
+  if (stages.question.hidden || secondsLeft <= 0) { setPaused(false); return; }
+  document.getElementById('timer-bar-fill').style.transition = '';
+  setPaused(false);
+  runClock();
+}
+
+function togglePause() {
+  if (paused) resumeGame();
+  else pauseGame();
+}
+
+document.getElementById('pause-btn').addEventListener('click', () => {
+  initAudio();
+  togglePause();
+});
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  initAudio();
+  previousQuestion();
+});
 
 function timeUp() {
   const stamp = document.getElementById('timeup-stamp');
@@ -930,7 +1010,12 @@ async function logAnswer() {
   // write has to say so rather than leave the screen claiming success.
   try {
     await store.addAnswer({ questionId: q.id, questionText: q.text, name });
-    sessionAnswers.push({ questionText: q.text, name });
+    // Going back and re-answering replaces that question's entry rather
+    // than adding a second one, so the debrief shows one name per target.
+    const existing = sessionAnswers.findIndex(a => String(a.questionId) === String(q.id));
+    const entry = { questionId: q.id, questionText: q.text, name };
+    if (existing >= 0) sessionAnswers[existing] = entry;
+    else sessionAnswers.push(entry);
     await refreshAnswerLog();
   } catch {
     document.getElementById('logged-for-question').textContent =

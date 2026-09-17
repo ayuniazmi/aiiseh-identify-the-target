@@ -1111,7 +1111,66 @@ button.armed {
 }
 .logged-list.pop { animation: lock-pop 0.45s cubic-bezier(.2,1.6,.4,1); }
 
-.controls { display: flex; gap: 12px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+/* z-index above the pause veil so the controls stay visible and usable
+   while paused — otherwise RESUME is hidden behind its own overlay */
+.controls {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* pause button swaps between the two bars and a play triangle */
+#pause-btn .icon-resume { display: none; }
+#pause-btn.is-paused .icon-pause { display: none; }
+#pause-btn.is-paused .icon-resume { display: block; }
+#pause-btn.is-paused {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(23, 224, 240, 0.1);
+}
+
+/* held-signal veil over the stage while paused */
+.paused-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  background: rgba(2, 5, 14, 0.82);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: veil-in 0.25s ease;
+}
+.paused-veil.on { display: flex; }
+@keyframes veil-in { from { opacity: 0; } to { opacity: 1; } }
+.paused-word {
+  font-family: var(--font-impact);
+  font-size: clamp(3rem, 12vw, 9rem);
+  letter-spacing: 12px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  text-shadow: 0 0 60px rgba(23, 224, 240, 0.6);
+  animation: paused-breathe 2.4s ease-in-out infinite;
+}
+@keyframes paused-breathe {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.paused-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
 /* ============ countdown drama ============ */
 
@@ -1219,8 +1278,11 @@ button.armed {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* `safe` centring + vertical scroll: on a short window the controls would
+     otherwise overflow past the bottom edge with no way to reach them. */
+  justify-content: safe center;
   align-items: center;
+  overflow: hidden auto;
   padding: 92px 4vw 44px;
 }
 #play-view.cinematic .stage-panel { width: 100%; }
