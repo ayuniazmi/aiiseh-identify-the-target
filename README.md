@@ -1,7 +1,7 @@
 # AIISeh — Identify the Target
 
 A spy-themed team bonding game. A classified question drops on screen and your
-team has 10 seconds to call out a name before the file burns.
+team has 15 seconds to call out a name before the file burns.
 
 **Play it:** https://ayuniazmi.github.io/aiiseh-identify-the-target/
 
